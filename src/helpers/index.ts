@@ -86,12 +86,14 @@ export const generatePerson = ({
   passwordLength,
   minAge,
   maxAge,
+  userAddress,
 }: {
-  age: number;
-  sex: string;
-  passwordLength: number;
-  minAge: number | undefined;
-  maxAge: number | undefined;
+  age?: number;
+  sex?: string;
+  passwordLength?: number;
+  minAge?: number;
+  maxAge?: number;
+  userAddress?: RandomAddress;
 }) => {
   const ageFromRange =
     minAge && maxAge ? randomAge(minAge, maxAge) : randomAge(18, 62);
@@ -103,10 +105,10 @@ export const generatePerson = ({
     age: age,
     dateOfBirth: getDateOfBirth(age),
     firstName: faker.name.firstName(sex),
-    lastName: faker.name.lastName,
+    lastName: faker.name.lastName("male"),
     middleName: getMiddleNameInitial(),
     phoneNumber: faker.phone.phoneNumber("!##-!##-####"),
-    address: getRandomAddress(),
+    address: userAddress || getRandomAddress(),
     job: faker.name.jobTitle(),
     username: faker.internet.userName(),
     password: generate({

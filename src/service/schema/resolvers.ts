@@ -34,6 +34,7 @@ export const resolvers = {
       {
         count,
         minAge,
+        maxAge,
         sex,
         passwordLength,
       }: {
@@ -45,10 +46,17 @@ export const resolvers = {
       }
     ) => {
       const bulkAddresses = getBulkAddresses(count);
-      const bulkPersons = null;
+      const bulkPersons = bulkAddresses.map((userAddress) =>
+        generatePerson({
+          minAge,
+          maxAge,
+          sex,
+          passwordLength,
+          userAddress,
+        })
+      );
 
-      console.log(bulkAddresses.length);
-      return "Default String";
+      return bulkPersons;
     },
   },
 };
