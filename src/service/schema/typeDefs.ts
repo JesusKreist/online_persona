@@ -86,6 +86,16 @@ export const typeDefs = gql`
     """
     Return selected data for a person.
     """
-    getPerson(age: Int, sex: String): Person!
+    getPerson(
+      age: Int
+      sex: String
+      minAge: String
+      maxAge: String
+      passwordLength: String
+    ): Person!
+    """
+    Return selected data for a number of persons. The number of results is determined by the user.
+    """
+    getBulkData(count: Int!): String
   }
 `;

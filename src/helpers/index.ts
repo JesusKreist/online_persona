@@ -1,4 +1,6 @@
+import { faker } from "@faker-js/faker";
 import dayjs from "dayjs";
+import { generate } from "generate-password";
 import { addresses } from "../service/database/addresses-us-all.json";
 
 interface RandomAddress {
@@ -60,3 +62,57 @@ export const getDateOfBirth = (age: number): string => {
 
 export const flipCoin = (value1: any, value2: any) =>
   Math.random() < 0.5 ? value1 : value2;
+
+const shuffleArray = (a: any) => {
+  var j, x, i;
+  for (i = a.length - 1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1));
+    x = a[i];
+    a[i] = a[j];
+    a[j] = x;
+  }
+  return a;
+};
+
+export const getBulkAddresses = (count: number) => {
+  const completeAddresses = addresses.filter((address) => !!address.city);
+  const shuffledAddresses = shuffleArray(completeAddresses) as RandomAddress[];
+  return shuffledAddresses.slice(0, count);
+};
+
+export const generatePerson = ({
+  age,
+  sex,
+  passwordLength,
+  minAge,
+  maxAge,
+}: {
+  age: number;
+  sex: string;
+  passwordLength: number;
+  minAge: number | undefined;
+  maxAge: number | undefined;
+}) => {
+  const ageFromRange =
+    minAge && maxAge ? randomAge(minAge, maxAge) : randomAge(18, 62);
+  age = age || ageFromRange;
+  sex = sex || flipCoin("male", "female");
+  passwordLength = passwordLength || 12;
+
+  return {
+    age: age,
+    dateOfBirth: getDateOfBirth(age),
+    firstName: faker.name.firstName(sex),
+    lastName: faker.name.lastName,
+    middleName: getMiddleNameInitial(),
+    phoneNumber: faker.phone.phoneNumber("!##-!##-####"),
+    address: getRandomAddress(),
+    job: faker.name.jobTitle(),
+    username: faker.internet.userName(),
+    password: generate({
+      length: passwordLength,
+      numbers: true,
+      uppercase: true,
+    }),
+  };
+};
