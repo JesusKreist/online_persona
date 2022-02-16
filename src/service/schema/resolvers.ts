@@ -1,5 +1,8 @@
 import { generatePerson, getBulkAddresses } from "../../helpers";
 import { LatitudeResolver, LongitudeResolver } from "graphql-scalars";
+import { ApiUserModel } from "../database/apiUser";
+import { UserInputError } from "apollo-server";
+import { randomBytes } from "crypto";
 
 export const resolvers = {
   Latitude: LatitudeResolver,
@@ -17,8 +20,8 @@ export const resolvers = {
         age: number;
         sex: string;
         passwordLength: number;
-        minAge: number | undefined;
-        maxAge: number | undefined;
+        minAge: number;
+        maxAge: number;
       }
     ) => {
       return generatePerson({
@@ -57,6 +60,41 @@ export const resolvers = {
       );
 
       return bulkPersons;
+    },
+    createUser: async (
+      _root: any,
+      {
+        firstName,
+        lastName,
+        emailAddress,
+      }: {
+        firstName: string;
+        lastName: string;
+        emailAddress: string;
+      }
+    ) => {
+      const isEmailDuplicate = !!(await ApiUserModel.findOne({
+        emailAddress: emailAddress.toLowerCase(),
+      }));
+      if (!!isEmailDuplicate) {
+        return new UserInputError("Duplicate email address");
+      }
+
+      const newUser = await ApiUserModel.create({
+        apiKey: randomBytes(20).toString("hex"),
+        firstName,
+        lastName,
+        emailAddress,
+      });
+      await newUser.save();
+
+      return {
+        apiKey: newUser.apiKey,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        emailAddress: newUser.emailAddress,
+        isBulkAllowed: newUser.isBulkAllowed,
+      };
     },
   },
 };

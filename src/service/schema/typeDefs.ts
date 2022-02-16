@@ -82,6 +82,15 @@ export const typeDefs = gql`
     """
     age: String!
   }
+
+  type User {
+    apiKey: String!
+    firstName: String!
+    lastName: String!
+    isBulkAllowed: Boolean!
+    emailAddress: String!
+  }
+
   type Query {
     """
     Return selected data for a person.
@@ -102,5 +111,13 @@ export const typeDefs = gql`
       maxAge: Int
       passwordLength: Int
     ): [Person!]!
+    """
+    Create authorised users for the api.
+    """
+    createUser(
+      firstName: String!
+      lastName: String!
+      emailAddress: String!
+    ): User
   }
 `;
