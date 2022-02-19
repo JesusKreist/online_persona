@@ -1,14 +1,18 @@
 import { generatePerson, getBulkAddresses } from "../../helpers";
 import { LatitudeResolver, LongitudeResolver } from "graphql-scalars";
 import { ApiUserModel } from "../database/apiUser";
-import { UserInputError } from "apollo-server";
+import { ApolloError, UserInputError } from "apollo-server";
 import { randomBytes } from "crypto";
+
+interface ResolverContext {
+  apiKey: string;
+}
 
 export const resolvers = {
   Latitude: LatitudeResolver,
   Longitude: LongitudeResolver,
   Query: {
-    getPerson: (
+    getPerson: async (
       _root: any,
       {
         age,
@@ -16,14 +20,27 @@ export const resolvers = {
         passwordLength,
         minAge,
         maxAge,
+        userId,
       }: {
         age: number;
         sex: string;
         passwordLength: number;
         minAge: number;
         maxAge: number;
-      }
+        userId: string;
+      },
+      { apiKey }: ResolverContext
     ) => {
+      // todo sanitize user id
+      const user = await ApiUserModel.findById(userId);
+      console.log(user);
+      if (!user) return new UserInputError("Api key or user invalid");
+
+      const isApiKeyValid = user.apiKey == apiKey;
+      console.log(isApiKeyValid);
+      console.log(apiKey);
+      if (!isApiKeyValid) return new UserInputError("Api key or user invalid");
+
       return generatePerson({
         age,
         sex,
@@ -32,7 +49,7 @@ export const resolvers = {
         minAge,
       });
     },
-    getBulkData: (
+    getBulkData: async (
       _root: any,
       {
         count,
@@ -40,14 +57,26 @@ export const resolvers = {
         maxAge,
         sex,
         passwordLength,
+        userId,
       }: {
         count: number;
         minAge: number;
         maxAge: number;
         sex: string;
         passwordLength: number;
+        userId: string;
       }
     ) => {
+      const user = await ApiUserModel.findById(userId);
+      if (!user) return new UserInputError("Api key or user invalid");
+
+      // const isApiKeyValid = user.apiKey == apiKey;
+      // if (!isApiKeyValid) return new UserInputError("Api key or user invalid");
+
+      if (!user.isBulkAllowed) {
+        return new ApolloError("User cannot make bulk requests");
+      }
+
       const bulkAddresses = getBulkAddresses(count);
       const bulkPersons = bulkAddresses.map((userAddress) =>
         generatePerson({
@@ -98,3 +127,6 @@ export const resolvers = {
     },
   },
 };
+
+// todo
+// sanitize inputs for mutations
