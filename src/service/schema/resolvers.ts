@@ -1,8 +1,13 @@
 import { generatePerson, getBulkAddresses } from "../../helpers";
 import { LatitudeResolver, LongitudeResolver } from "graphql-scalars";
 import { ApiUserModel } from "../database/apiUser";
-import { AuthenticationError, UserInputError } from "apollo-server";
+import {
+  ApolloError,
+  AuthenticationError,
+  UserInputError,
+} from "apollo-server";
 import { randomBytes } from "crypto";
+import sanitize from "mongo-sanitize";
 
 interface ResolverContext {
   apiKey: string;
@@ -32,13 +37,11 @@ export const resolvers = {
       { apiKey }: ResolverContext
     ) => {
       // todo sanitize user id
-      const user = await ApiUserModel.findById(userId);
-      console.log(user);
+      const user = await ApiUserModel.findById(sanitize(userId));
+
       if (!user) return new UserInputError("Api key or user invalid");
 
       const isApiKeyValid = user.apiKey == apiKey;
-      console.log(isApiKeyValid);
-      console.log(apiKey);
       if (!isApiKeyValid) return new UserInputError("Api key or user invalid");
 
       return generatePerson({
@@ -69,13 +72,10 @@ export const resolvers = {
       { apiKey }: ResolverContext
     ) => {
       // todo sanitize user id
-      const user = await ApiUserModel.findById(userId);
-      console.log(user);
+      const user = await ApiUserModel.findById(sanitize(userId));
       if (!user) return new UserInputError("Api key or user invalid");
 
       const isApiKeyValid = user.apiKey == apiKey;
-      console.log(isApiKeyValid);
-      console.log(apiKey);
       if (!isApiKeyValid) return new UserInputError("Api key or user invalid");
 
       if (!user.isBulkAllowed) {
@@ -104,11 +104,17 @@ export const resolvers = {
       }: {
         firstName: string;
         lastName: string;
-        emailAddress: string;
+        emailAddress: any;
       }
     ) => {
+      if (
+        !(emailAddress instanceof String || typeof emailAddress === "string")
+      ) {
+        return new ApolloError("Something went wrong.");
+      }
+
       const isEmailDuplicate = !!(await ApiUserModel.findOne({
-        emailAddress: emailAddress.toLowerCase(),
+        emailAddress: sanitize(emailAddress).toLowerCase(),
       }));
       if (!!isEmailDuplicate) {
         return new UserInputError("Duplicate email address");
