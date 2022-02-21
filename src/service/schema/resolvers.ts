@@ -1,7 +1,7 @@
 import { generatePerson, getBulkAddresses } from "../../helpers";
 import { LatitudeResolver, LongitudeResolver } from "graphql-scalars";
 import { ApiUserModel } from "../database/apiUser";
-import { ApolloError, UserInputError } from "apollo-server";
+import { AuthenticationError, UserInputError } from "apollo-server";
 import { randomBytes } from "crypto";
 
 interface ResolverContext {
@@ -65,16 +65,21 @@ export const resolvers = {
         sex: string;
         passwordLength: number;
         userId: string;
-      }
+      },
+      { apiKey }: ResolverContext
     ) => {
+      // todo sanitize user id
       const user = await ApiUserModel.findById(userId);
+      console.log(user);
       if (!user) return new UserInputError("Api key or user invalid");
 
-      // const isApiKeyValid = user.apiKey == apiKey;
-      // if (!isApiKeyValid) return new UserInputError("Api key or user invalid");
+      const isApiKeyValid = user.apiKey == apiKey;
+      console.log(isApiKeyValid);
+      console.log(apiKey);
+      if (!isApiKeyValid) return new UserInputError("Api key or user invalid");
 
       if (!user.isBulkAllowed) {
-        return new ApolloError("User cannot make bulk requests");
+        return new AuthenticationError("User cannot make bulk requests");
       }
 
       const bulkAddresses = getBulkAddresses(count);

@@ -101,6 +101,7 @@ export const typeDefs = gql`
       minAge: String
       maxAge: String
       passwordLength: String
+      userId: String!
     ): Person!
     """
     Return selected data for a number of persons. The number of results is determined by the user.
@@ -110,6 +111,7 @@ export const typeDefs = gql`
       minAge: Int
       maxAge: Int
       passwordLength: Int
+      userId: String!
     ): [Person!]!
     """
     Create authorised users for the api.

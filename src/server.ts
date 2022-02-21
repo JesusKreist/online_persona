@@ -3,8 +3,9 @@ import { typeDefs } from "./service/schema/typeDefs";
 import { resolvers } from "./service/schema/resolvers";
 import { mongoose } from "@typegoose/typegoose";
 import config from "./helpers/config";
+import { context } from "./service/schema/context";
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, context });
 
 // The `listen` method launches a web server.
 server.listen().then(({ url }) => {
